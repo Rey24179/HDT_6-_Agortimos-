@@ -30,7 +30,6 @@ class MapFactory {
         }
     }
 }
-// ...existing code...
 
 // Gestor de Pokémon con operaciones principales
 class PokemonManager {
@@ -46,11 +45,15 @@ class PokemonManager {
     public void loadFromFile(String filename) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(filename));
         String line;
+        br.readLine(); // Saltar la primera línea (encabezados)
         while ((line = br.readLine()) != null) {
             String[] data = line.split(",");
-            if (data.length < 3) continue;
-            Pokemon p = new Pokemon(data[0], data[1], data[2]);
-            pokemonMap.put(p.name, p);
+            if (data.length < 8) continue;
+            String name = data[0];
+            String type1 = data[2];
+            String ability = data[7].split(" ")[0]; // Tomar la primera habilidad
+            Pokemon p = new Pokemon(name, type1, ability);
+            pokemonMap.put(name, p);
         }
         br.close();
     }
@@ -98,5 +101,56 @@ class PokemonManager {
         pokemonMap.values().stream()
             .filter(p -> p.ability.equalsIgnoreCase(ability))
             .forEach(System.out::println);
+    }
+}
+
+// Programa principal
+public class PokemonApp {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Seleccione la implementación de Map: 1) HashMap 2) TreeMap 3) LinkedHashMap");
+        int option = scanner.nextInt();
+        PokemonManager manager = new PokemonManager(option);
+        
+        try {
+            manager.loadFromFile("pokemon_data_pokeapi.csv");
+        } catch (IOException e) {
+            System.out.println("Error al leer el archivo.");
+            return;
+        }
+        
+        boolean running = true;
+        while (running) {
+            System.out.println("\nOpciones: 1) Agregar Pokémon 2) Mostrar Pokémon 3) Colección ordenada 4) Todos ordenados 5) Buscar por habilidad 6) Salir");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Limpiar buffer
+            
+            switch (choice) {
+                case 1:
+                    System.out.print("Nombre del Pokémon: ");
+                    manager.addPokemonToUser(scanner.nextLine());
+                    break;
+                case 2:
+                    System.out.print("Nombre del Pokémon: ");
+                    manager.showPokemonData(scanner.nextLine());
+                    break;
+                case 3:
+                    manager.showUserCollectionSortedByType();
+                    break;
+                case 4:
+                    manager.showAllPokemonSortedByType();
+                    break;
+                case 5:
+                    System.out.print("Habilidad: ");
+                    manager.showPokemonByAbility(scanner.nextLine());
+                    break;
+                case 6:
+                    running = false;
+                    break;
+                default:
+                    System.out.println("Opción inválida.");
+            }
+        }
+        scanner.close();
     }
 }
